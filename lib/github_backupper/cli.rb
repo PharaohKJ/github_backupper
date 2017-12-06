@@ -44,7 +44,7 @@ module GithubBackupper
         else
           logger.info('clone.')
           clone_url = r.clone_url
-          clone_url.gsub('https://github.com', "https://#{github_user}:#{github_token}@github.com")
+          clone_url.gsub!('https://github.com', "https://#{github_user}:#{github_token}@github.com")
           runner.set("cd #{options[:backup_to]} && git clone #{clone_url}")
         end
         runner.run

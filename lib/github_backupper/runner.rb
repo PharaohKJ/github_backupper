@@ -7,7 +7,7 @@ module GithubBackupper
       @cmd = cmd
     end
     def run
-      if (@dryrun)
+      if @dryrun
         puts @cmd
       else
         `#{@cmd}`
