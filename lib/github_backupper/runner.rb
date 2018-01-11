@@ -1,6 +1,6 @@
 # coding: utf-8
 module GithubBackupper
-  # コマンド実行の実装
+  # コマンド実行の実装 OS上のコマンド実行を行う
   class Runner
     def initialize(options)
       @dryrun = options[:dryrun] || false

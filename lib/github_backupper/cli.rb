@@ -36,16 +36,16 @@ module GithubBackupper
 
         logger.info("#{i + 1} : #{r.full_name}")
 
-        cloned_path = "#{backup_to}/#{r.name}"
+        cloned_path = "#{backup_to}/#{r.full_name}"
         do_fetch = File.exist?(cloned_path)
         if do_fetch
           logger.info("fetch on #{cloned_path}")
           runner.set("cd #{cloned_path} && git fetch")
         else
-          logger.info('clone.')
+          logger.info("clone to #{cloned_path}")
           clone_url = r.clone_url
           clone_url.gsub!('https://github.com', "https://#{github_user}:#{github_token}@github.com")
-          runner.set("cd #{options[:backup_to]} && git clone #{clone_url}")
+          runner.set("mkdir -p #{cloned_path} && git clone #{clone_url} #{cloned_path}")
         end
         runner.run
       end
