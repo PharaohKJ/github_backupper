@@ -2,7 +2,7 @@
 
 module GithubBackupper
   class CLI < Thor
-    desc "backup", "backup repositories"
+    desc 'backup', 'backup repositories'
     option :github_token, desc: 'GitHub Access Token', aliases: '-t', default: ENV['GITHUBBACKUPPER_TOKEN']
     option :github_user, desc: 'GitHub user name', aliases: '-u', default: ENV['GITHUBBACKUPPER_USER']
     option :backup_to, desc: 'store directory.', aliases: '-p', default: ENV['GITHUBBACKUPPER_BACKUP_TO'] || '~/backupper'
@@ -34,7 +34,7 @@ module GithubBackupper
       client.repositories.each_with_index do |r, i|
         # see https://developer.github.com/v3/repos/#get
 
-        logger.info("#{i+1} : #{r.full_name}")
+        logger.info("#{i + 1} : #{r.full_name}")
 
         cloned_path = "#{backup_to}/#{r.name}"
         do_fetch = File.exist?(cloned_path)

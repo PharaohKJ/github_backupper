@@ -1,11 +1,7 @@
 module GithubBackupper
   class Github
-    def initialize
+    def initialize; end
 
-    end
-
-    def repositories
-
-    end
+    def repositories; end
   end
 end
