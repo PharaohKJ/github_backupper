@@ -1,0 +1,6 @@
+version: '2'
+services:
+  app:
+    image: pharaohkj/github-backupper:latest
+    build:
+      context: .
