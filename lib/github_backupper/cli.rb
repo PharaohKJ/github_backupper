@@ -29,12 +29,12 @@ module GithubBackupper
       app.clone_wiki
     end
 
-    desc 'issue', 'backup wiki repositories'
+    desc 'issues', 'backup issues repositories'
     option :github_token, desc: 'GitHub Access Token', aliases: '-t', default: ENV['GITHUBBACKUPPER_TOKEN']
     option :github_user, desc: 'GitHub user name', aliases: '-u', default: ENV['GITHUBBACKUPPER_USER']
     option :backup_to, desc: 'store directory.', aliases: '-p', default: ENV['GITHUBBACKUPPER_BACKUP_TO'] || '~/backupper'
     option :dryrun, desc: 'dry-run', type: :boolean, default: false
-    def issue
+    def issues
       app = App.new(options)
       app.fetch_repositories
       app.check
