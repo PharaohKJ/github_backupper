@@ -3,6 +3,7 @@ module GithubBackupper
   # コマンド実行の実装 OS上のコマンド実行を行う
   class Runner
     def initialize(options)
+      @logger = Logger.logger
       @dryrun = options[:dryrun] || false
     end
 
@@ -13,9 +14,10 @@ module GithubBackupper
     # 実実行
     def run
       if @dryrun
-        puts @cmd
+        @logger.info @cmd
       else
-        `#{@cmd}`
+        @logger.info(`#{@cmd}`)
+        @logger.info($?)
       end
     end
   end
