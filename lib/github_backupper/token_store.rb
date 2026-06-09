@@ -143,10 +143,10 @@ module GithubBackupper
       cipher = OpenSSL::Cipher.new('aes-256-gcm')
       cipher.decrypt
       cipher.key = secret_key
-      cipher.iv = Base64.decode64(data.fetch('iv'))
-      cipher.auth_tag = Base64.decode64(data.fetch('tag'))
+      cipher.iv = Base64.strict_decode64(data.fetch('iv'))
+      cipher.auth_tag = Base64.strict_decode64(data.fetch('tag'))
 
-      cipher.update(Base64.decode64(data.fetch('ciphertext'))) + cipher.final
+      cipher.update(Base64.strict_decode64(data.fetch('ciphertext'))) + cipher.final
     rescue JSON::ParserError, KeyError, OpenSSL::Cipher::CipherError => e
       raise "Unable to decrypt access token from #{@access_token_path}: #{e.message}"
     end

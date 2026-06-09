@@ -10,7 +10,7 @@ GitHub のリポジトリ、Wiki、Issue をローカルにバックアップす
 ## インストール
 
 ```
-$ clone <this>
+$ git clone <this>
 $ bundle exec rake build
 $ gem install pkg/github_backupper-0.1.0.gem
 $ # or
