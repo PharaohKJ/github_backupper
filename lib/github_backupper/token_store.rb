@@ -20,25 +20,56 @@ module GithubBackupper
 
     def resolve_token(explicit_token)
       if explicit_token && !explicit_token.empty?
-        store_token(explicit_token)
         return explicit_token
       end
 
       token = load_token
       return token if token
 
-      raise 'GitHub access token not found. Pass --github_token or set GITHUBBACKUPPER_TOKEN once to bootstrap encrypted storage.'
+      raise 'GitHub access token not found. Run `github_backupper login -t <token>` first, or pass --github_token for this run.'
+    end
+
+    def resolve_credentials(explicit_token:, explicit_user:)
+      token = explicit_token
+      user = explicit_user
+      if (token.nil? || token.empty?) || (user.nil? || user.empty?)
+        stored = load_credentials
+        token = stored[:github_token] if (token.nil? || token.empty?) && stored
+        user = stored[:github_user] if (user.nil? || user.empty?) && stored
+      end
+
+      if token.nil? || token.empty?
+        raise 'GitHub access token not found. Run `github_backupper login -t <token>` first, or pass --github_token for this run.'
+      end
+
+      { github_token: token, github_user: user }
     end
 
     def load_token
+      credentials = load_credentials
+      credentials && credentials[:github_token]
+    end
+
+    def load_credentials
       return nil unless File.exist?(@access_token_path)
 
-      decrypt_token(File.binread(@access_token_path))
+      plaintext = decrypt_token(File.binread(@access_token_path))
+      parse_credentials(plaintext)
     end
 
     def store_token(token)
-      write_file(@access_token_path, encrypt_token(token))
+      store_credentials(token: token, github_user: nil)
       token
+    end
+
+    def store_credentials(token:, github_user:)
+      body = {
+        github_token: token.to_s,
+        github_user: github_user&.to_s,
+        version: 1
+      }
+      write_file(@access_token_path, encrypt_token(JSON.generate(body)))
+      { github_token: body[:github_token], github_user: body[:github_user] }
     end
 
     private
@@ -119,6 +150,21 @@ module GithubBackupper
       Base64.strict_decode64(value)
     rescue ArgumentError
       nil
+    end
+
+    def parse_credentials(plaintext)
+      parsed = JSON.parse(plaintext)
+      token = parsed['github_token']
+      user = parsed['github_user']
+      return nil if token.nil? || token.empty?
+
+      { github_token: token, github_user: user }
+    rescue JSON::ParserError
+      token = plaintext.to_s
+      return nil if token.empty?
+
+      # Backward compatibility for old token-only encrypted payload.
+      { github_token: token, github_user: nil }
     end
 
     def write_file(path, content)

@@ -20,8 +20,11 @@ module GithubBackupper
       @dryrun = options[:dryrun]
       @backup_to = File.expand_path(options[:backup_to])
       @token_store = TokenStore.new
-      @github_token = @token_store.resolve_token(options[:github_token])
-      options = options.merge(github_token: @github_token)
+      credentials = @token_store.resolve_credentials(
+        explicit_token: options[:github_token],
+        explicit_user: options[:github_user]
+      )
+      options = options.merge(credentials)
 
       @logger = Logger.logger
       Logger.dump(options)

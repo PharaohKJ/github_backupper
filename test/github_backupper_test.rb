@@ -20,11 +20,14 @@ class TokenStoreTest < Minitest::Test
     FileUtils.remove_entry(@tmpdir) if @tmpdir && File.exist?(@tmpdir)
   end
 
-  def test_creates_and_saves_secret_key_while_encrypting_token
+  def test_store_credentials_creates_and_saves_secret_key_while_encrypting_credentials
     store = build_store(env: {})
 
     token = 'virtual-token-123'
-    assert_equal token, store.resolve_token(token)
+    user = 'virtual-user'
+    stored = store.store_credentials(token: token, github_user: user)
+    assert_equal token, stored[:github_token]
+    assert_equal user, stored[:github_user]
     assert_path_exists @secret_key_path
     assert_path_exists @access_token_path
 
@@ -32,7 +35,17 @@ class TokenStoreTest < Minitest::Test
     assert_equal GithubBackupper::TokenStore::SECRET_KEY_BYTES, stored_key.bytesize
 
     reloaded_store = build_store(env: {})
-    assert_equal token, reloaded_store.load_token
+    loaded = reloaded_store.load_credentials
+    assert_equal token, loaded[:github_token]
+    assert_equal user, loaded[:github_user]
+  end
+
+  def test_resolve_token_with_explicit_token_does_not_persist_files
+    store = build_store(env: {})
+
+    assert_equal 'ephemeral-token', store.resolve_token('ephemeral-token')
+    refute File.exist?(@secret_key_path)
+    refute File.exist?(@access_token_path)
   end
 
   def test_loads_secret_key_from_environment_when_key_file_does_not_exist
@@ -42,20 +55,24 @@ class TokenStoreTest < Minitest::Test
     }
     store = build_store(env: env)
 
-    store.store_token('env-backed-token')
+    store.store_credentials(token: 'env-backed-token', github_user: 'env-user')
 
     persisted_key = Base64.strict_decode64(File.read(@secret_key_path).strip)
     assert_equal secret_key, persisted_key
-    assert_equal 'env-backed-token', store.load_token
+    loaded = store.load_credentials
+    assert_equal 'env-backed-token', loaded[:github_token]
+    assert_equal 'env-user', loaded[:github_user]
   end
 
-  def test_reads_previously_encrypted_token_without_explicit_token
+  def test_reads_previously_encrypted_credentials_without_explicit_values
     initial_store = build_store(env: {})
-    initial_store.store_token('persisted-token')
+    initial_store.store_credentials(token: 'persisted-token', github_user: 'persisted-user')
 
     reloaded_store = build_store(env: {})
+    resolved = reloaded_store.resolve_credentials(explicit_token: nil, explicit_user: nil)
 
-    assert_equal 'persisted-token', reloaded_store.resolve_token(nil)
+    assert_equal 'persisted-token', resolved[:github_token]
+    assert_equal 'persisted-user', resolved[:github_user]
   end
 
   private

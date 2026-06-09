@@ -10,6 +10,9 @@ module GithubBackupper
       @client = Octokit::Client.new(
         access_token: @github_token
       )
+      if @github_user.nil? || @github_user.empty?
+        @github_user = @client.user.login
+      end
     end
 
     def clone_url_with_auth(url)
