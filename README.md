@@ -2,6 +2,11 @@
 
 GitHub のリポジトリ、Wiki、Issue をローカルにバックアップする CLI ツールです。
 
+## 前提条件
+
+- GitHub CLI (`gh`) が必要です（`login` コマンドで使用）
+- インストール手順: https://github.com/cli/cli
+
 ## インストール
 
 ```
@@ -82,6 +87,7 @@ $ github_backupper issues -p backuprepo/issues
 - GITHUBBACKUPPER_TOKEN
 - GITHUBBACKUPPER_BACKUP_TO
 - GITHUBBACKUPPER_SECRET_KEY
+- GITHUBBACKUPPER_ACCESS_TOKEN_CONTENT
 
 `login` は `gh` コマンド必須です。未インストール時はエラー終了します。
 インストール手順: https://github.com/cli/cli
@@ -91,3 +97,50 @@ $ github_backupper issues -p backuprepo/issues
 ```
 $ github_backupper help
 ```
+
+## 他マシンで実行する手順（環境変数でファイル内容を渡す）
+
+このツールで `login` 済みのマシンから、暗号鍵ファイルと暗号化済み資格情報ファイルを別マシンに持ち出して実行できます。
+
+### 1. 元マシンで login
+
+```
+$ github_backupper login
+```
+
+生成されるファイル:
+
+- `~/.github_backupper_secret.key`
+- `~/.github_backupper_access_token`
+
+### 2. ファイル内容を環境変数にセット
+
+```
+$ export GITHUBBACKUPPER_SECRET_KEY="$(cat ~/.github_backupper_secret.key)"
+$ export GITHUBBACKUPPER_ACCESS_TOKEN_CONTENT="$(cat ~/.github_backupper_access_token)"
+```
+
+### 3. 実行先マシンに環境変数を渡す
+
+例: SSH で一時的に環境変数を渡して実行
+
+```
+$ ssh user@other-host \
+	"export GITHUBBACKUPPER_SECRET_KEY='${GITHUBBACKUPPER_SECRET_KEY}'; \
+	 export GITHUBBACKUPPER_ACCESS_TOKEN_CONTENT='${GITHUBBACKUPPER_ACCESS_TOKEN_CONTENT}'; \
+	 github_backupper wiki -p ./tmp"
+```
+
+### 4. 実行
+
+`-t` や `-u` を渡さなくても、環境変数内の保存済み資格情報を使って実行できます。
+
+```
+$ github_backupper wiki -p ./tmp
+```
+
+### 5. 注意点
+
+- 2つの環境変数は必ずセットで渡してください（片方だけでは復号不可）。
+- ファイル権限は `600` 推奨です。
+- 2ファイルを持つ人は実質的に GitHub 資格情報を利用できるため、取り扱いは秘密情報と同等にしてください。

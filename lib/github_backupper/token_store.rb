@@ -9,13 +9,16 @@ module GithubBackupper
     SECRET_KEY_PATH = File.expand_path('~/.github_backupper_secret.key')
     ACCESS_TOKEN_PATH = File.expand_path('~/.github_backupper_access_token')
     SECRET_KEY_ENV = 'GITHUBBACKUPPER_SECRET_KEY'
+    SECRET_KEY_PATH_ENV = 'GITHUBBACKUPPER_SECRET_KEY_PATH'
+    ACCESS_TOKEN_PATH_ENV = 'GITHUBBACKUPPER_ACCESS_TOKEN_PATH'
+    ACCESS_TOKEN_CONTENT_ENV = 'GITHUBBACKUPPER_ACCESS_TOKEN_CONTENT'
     SECRET_KEY_BYTES = 32
     IV_BYTES = 12
 
     def initialize(secret_key_path: SECRET_KEY_PATH, access_token_path: ACCESS_TOKEN_PATH, env: ENV)
-      @secret_key_path = secret_key_path
-      @access_token_path = access_token_path
       @env = env
+      @secret_key_path = expand_path(@env[SECRET_KEY_PATH_ENV], fallback: secret_key_path)
+      @access_token_path = expand_path(@env[ACCESS_TOKEN_PATH_ENV], fallback: access_token_path)
     end
 
     def resolve_token(explicit_token)
@@ -51,9 +54,10 @@ module GithubBackupper
     end
 
     def load_credentials
-      return nil unless File.exist?(@access_token_path)
+      encrypted_payload = load_encrypted_payload
+      return nil if encrypted_payload.nil? || encrypted_payload.empty?
 
-      plaintext = decrypt_token(File.binread(@access_token_path))
+      plaintext = decrypt_token(encrypted_payload)
       parse_credentials(plaintext)
     end
 
@@ -167,10 +171,23 @@ module GithubBackupper
       { github_token: token, github_user: nil }
     end
 
+    def load_encrypted_payload
+      env_payload = @env[ACCESS_TOKEN_CONTENT_ENV]
+      return env_payload.strip unless env_payload.nil? || env_payload.strip.empty?
+      return nil unless File.exist?(@access_token_path)
+
+      File.binread(@access_token_path)
+    end
+
     def write_file(path, content)
       File.open(path, File::WRONLY | File::CREAT | File::TRUNC, 0o600) do |file|
         file.write(content)
       end
+    end
+
+    def expand_path(path, fallback:)
+      value = path.nil? || path.empty? ? fallback : path
+      File.expand_path(value)
     end
   end
 end

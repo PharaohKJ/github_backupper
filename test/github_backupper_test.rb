@@ -75,6 +75,26 @@ class TokenStoreTest < Minitest::Test
     assert_equal 'persisted-user', resolved[:github_user]
   end
 
+  def test_reads_credentials_from_environment_contents_without_files
+    initial_store = build_store(env: {})
+    initial_store.store_credentials(token: 'portable-token', github_user: 'portable-user')
+
+    secret_key_content = File.read(@secret_key_path).strip
+    encrypted_payload = File.read(@access_token_path)
+    env = {
+      GithubBackupper::TokenStore::SECRET_KEY_ENV => secret_key_content,
+      GithubBackupper::TokenStore::ACCESS_TOKEN_CONTENT_ENV => encrypted_payload
+    }
+
+    File.delete(@secret_key_path)
+    File.delete(@access_token_path)
+
+    portable_store = build_store(env: env)
+    resolved = portable_store.resolve_credentials(explicit_token: nil, explicit_user: nil)
+    assert_equal 'portable-token', resolved[:github_token]
+    assert_equal 'portable-user', resolved[:github_user]
+  end
+
   private
 
   def build_store(env:)
