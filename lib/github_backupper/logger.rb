@@ -11,7 +11,12 @@ module GithubBackupper
 
     def self.dump(options)
       options.each do |k, v|
-        logger.info("#{k} : #{v}")
+        value = if k.to_s.match?(/token|secret/i)
+          '[FILTERED]'
+        else
+          v
+        end
+        logger.info("#{k} : #{value}")
       end
     end
 

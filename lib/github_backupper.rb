@@ -1,4 +1,5 @@
 require 'logger'
+require 'base64'
 require 'thor'
 require 'octokit'
 require 'dotenv'
@@ -6,6 +7,7 @@ require 'yaml'
 Dotenv.load
 require 'github_backupper/version'
 require 'github_backupper/logger'
+require 'github_backupper/token_store'
 require 'github_backupper/git_hub_helper'
 require 'github_backupper/runner'
 require 'github_backupper/cli'
@@ -17,6 +19,9 @@ module GithubBackupper
     def initialize(options)
       @dryrun = options[:dryrun]
       @backup_to = File.expand_path(options[:backup_to])
+      @token_store = TokenStore.new
+      @github_token = @token_store.resolve_token(options[:github_token])
+      options = options.merge(github_token: @github_token)
 
       @logger = Logger.logger
       Logger.dump(options)

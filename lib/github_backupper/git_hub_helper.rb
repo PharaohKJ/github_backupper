@@ -8,8 +8,7 @@ module GithubBackupper
       @github_user = options[:github_user]
       Octokit.auto_paginate = true
       @client = Octokit::Client.new(
-        login:    @github_user,
-        password: @github_token
+        access_token: @github_token
       )
     end
 
