@@ -45,7 +45,7 @@ $ github_backupper login -t githubaccesstoken
 
 - ~/.github_backupper_secret.key が無い場合は生成されます。
 - ただし、すでに ~/.github_backupper_access_token が存在していて秘密鍵が無い場合は復号できないため、
-	GITHUBBACKUPPER_SECRET_KEY 環境変数から秘密鍵を与える必要があります。
+  GITHUBBACKUPPER_SECRET_KEY 環境変数から秘密鍵を与える必要があります。
 
 ### 2. バックアップ実行
 

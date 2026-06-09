@@ -1,4 +1,5 @@
 require 'base64'
+require 'fileutils'
 require 'securerandom'
 require 'tmpdir'
 require_relative 'test_helper'
@@ -75,6 +76,17 @@ class TokenStoreTest < Minitest::Test
     assert_equal 'persisted-user', resolved[:github_user]
   end
 
+  def test_explicit_token_does_not_reuse_stored_user
+    initial_store = build_store(env: {})
+    initial_store.store_credentials(token: 'stored-token', github_user: 'stored-user')
+
+    reloaded_store = build_store(env: {})
+    resolved = reloaded_store.resolve_credentials(explicit_token: 'explicit-token', explicit_user: nil)
+
+    assert_equal 'explicit-token', resolved[:github_token]
+    assert_nil resolved[:github_user]
+  end
+
   def test_reads_credentials_from_environment_contents_without_files
     initial_store = build_store(env: {})
     initial_store.store_credentials(token: 'portable-token', github_user: 'portable-user')
@@ -93,6 +105,29 @@ class TokenStoreTest < Minitest::Test
     resolved = portable_store.resolve_credentials(explicit_token: nil, explicit_user: nil)
     assert_equal 'portable-token', resolved[:github_token]
     assert_equal 'portable-user', resolved[:github_user]
+  end
+
+  def test_secret_key_from_environment_ignores_trailing_whitespace
+    secret_key = SecureRandom.random_bytes(GithubBackupper::TokenStore::SECRET_KEY_BYTES)
+    initial_store = build_store(env: {
+      GithubBackupper::TokenStore::SECRET_KEY_ENV => Base64.strict_encode64(secret_key)
+    })
+    initial_store.store_credentials(token: 'spaced-token', github_user: 'spaced-user')
+
+    encrypted_payload = File.read(@access_token_path)
+    spaced_env = {
+      GithubBackupper::TokenStore::SECRET_KEY_ENV => "#{Base64.strict_encode64(secret_key)}\n",
+      GithubBackupper::TokenStore::ACCESS_TOKEN_CONTENT_ENV => encrypted_payload
+    }
+
+    File.delete(@secret_key_path)
+    File.delete(@access_token_path)
+
+    portable_store = build_store(env: spaced_env)
+    resolved = portable_store.resolve_credentials(explicit_token: nil, explicit_user: nil)
+
+    assert_equal 'spaced-token', resolved[:github_token]
+    assert_equal 'spaced-user', resolved[:github_user]
   end
 
   private

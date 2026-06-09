@@ -35,7 +35,7 @@ module GithubBackupper
     def resolve_credentials(explicit_token:, explicit_user:)
       token = explicit_token
       user = explicit_user
-      if (token.nil? || token.empty?) || (user.nil? || user.empty?)
+      if token.nil? || token.empty?
         stored = load_credentials
         token = stored[:github_token] if (token.nil? || token.empty?) && stored
         user = stored[:github_user] if (user.nil? || user.empty?) && stored
@@ -104,12 +104,13 @@ module GithubBackupper
     end
 
     def normalize_secret_key(value)
-      decoded = decode_base64(value)
+      normalized = value.to_s.strip
+      decoded = decode_base64(normalized)
       return decoded if decoded && decoded.bytesize == SECRET_KEY_BYTES
 
-      return value if value.bytesize == SECRET_KEY_BYTES
+      return normalized if normalized.bytesize == SECRET_KEY_BYTES
 
-      Digest::SHA256.digest(value)
+      Digest::SHA256.digest(normalized)
     end
 
     def decode_secret_key(value)
