@@ -8,9 +8,11 @@ module GithubBackupper
       @github_user = options[:github_user]
       Octokit.auto_paginate = true
       @client = Octokit::Client.new(
-        login:    @github_user,
-        password: @github_token
+        access_token: @github_token
       )
+      if @github_user.nil? || @github_user.empty?
+        @github_user = @client.user.login
+      end
     end
 
     def clone_url_with_auth(url)

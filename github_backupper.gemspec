@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.authors       = ['PharaohKJ']
   spec.email         = ['kato@phalanxware.com']
 
-  spec.summary       = 'Backup yout GitHub repositories, issues, wikis to local file.'
-  spec.description   = 'Backup yout GitHub repositories, issues, wikis to local file.'
-  spec.homepage      = 'https://github.com/PharaohKJ'
+  spec.summary       = 'Backup your GitHub repositories, issues, wikis to local disk.'
+  spec.description   = 'Backup your GitHub repositories, issues, wikis to local disk.'
+  spec.homepage      = 'https://github.com/PharaohKJ/github_backupper/'
   spec.license       = 'MIT'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
@@ -29,10 +29,11 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'bundler', '~> 2.0'
-  spec.add_development_dependency 'rake', '~> 13.0'
-  spec.add_development_dependency 'rspec', '~> 3.0'
+  spec.add_development_dependency 'bundler', '>= 4.0', '< 5.0'
+  spec.add_development_dependency 'rake', '>= 13.0', '< 14.0'
+  spec.add_development_dependency 'minitest', '>= 5.25', '< 6.0'
   spec.add_dependency 'thor'
   spec.add_dependency 'dotenv'
+  spec.add_dependency 'base64'
   spec.add_dependency 'octokit', '~> 4.0'
 end
